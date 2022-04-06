@@ -175,10 +175,12 @@ func (p *AnswerPKRequest) Unmarshal(b []byte) error {
 
 type AnswerPKResponse struct {
 	// ReqRoomID 发起PK请求的直播间ID。
-	ReqRoomID string `json:"ReqRoomID"`
-	RPCID     string `json:"rpcID,omitempty"`
-	Code      int    `json:"code"`
-	Error     string `json:"error"`
+	ReqRoomID          string `json:"ReqRoomID"`
+	RPCID              string `json:"rpcID,omitempty"`
+	ReplayRTCRoom      string `json:"replayRTCRoom"`
+	ReplayRTCRoomToken string `json:"replayRTCRoomToken"`
+	Code               int    `json:"code"`
+	Error              string `json:"error"`
 }
 
 func (p *AnswerPKResponse) Marshal() ([]byte, error) {
@@ -218,7 +220,9 @@ type PKAnswerNotify struct {
 	// PK被接受时才有该字段，表示被PK直播间对应的RTC房间
 	RTCRoom string `json:"rtcRoom,omitempty"`
 	// PK被接受时才有该字段，表示加入被PK直播间对应的RTC房间使用的token
-	RTCRoomToken string `json:"rtcRoomToken,omitempty"`
+	RTCRoomToken      string `json:"rtcRoomToken,omitempty"`
+	RelayRTCRoom      string `json:"relayRTCRoom"`
+	RelayRTCRoomToken string `json:"relayRTCRoomToken"`
 }
 
 func (p *PKAnswerNotify) Marshal() ([]byte, error) {

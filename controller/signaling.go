@@ -16,6 +16,7 @@ package controller
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -506,11 +507,15 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 		res.Code = errors.WSErrorRoomNotInPK
 		return err
 	}
+	replyRtcRoom := s.generateRoomID()
+	replyRtcRoomToken := s.generateRTCRoomToken(replyRtcRoom, senderID, "admin")
 	// 通知发起者
 	answerMessage := &protocol.PKAnswerNotify{
-		RPCID:     "",
-		ReqRoomID: req.ReqRoomID,
-		Accepted:  req.Accept,
+		RPCID:             "",
+		ReqRoomID:         req.ReqRoomID,
+		Accepted:          req.Accept,
+		RelayRTCRoom:      replyRtcRoom,
+		RelayRTCRoomToken: replyRtcRoomToken,
 	}
 	if req.Accept {
 		answerMessage.RTCRoom = selfRoom.ID
@@ -563,7 +568,21 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 	// 成功返回。
 	res.ReqRoomID = req.ReqRoomID
 	res.Code = errors.WSErrorOK
+	res.ReplayRTCRoom = replyRtcRoom
+	res.ReplayRTCRoomToken = replyRtcRoomToken
 	return nil
+}
+
+// generateRoomID 生成直播间ID。
+func (s *SignalingService) generateRoomID() string {
+	alphaNum := "0123456789abcdefghijklmnopqrstuvwxyz"
+	roomID := ""
+	idLength := 16
+	for i := 0; i < idLength; i++ {
+		index := rand.Intn(len(alphaNum))
+		roomID = roomID + string(alphaNum[index])
+	}
+	return roomID
 }
 
 // OnEndPK 结束PK。
