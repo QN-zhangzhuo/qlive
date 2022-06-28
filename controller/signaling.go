@@ -630,10 +630,10 @@ func (s *SignalingService) OnEndPK(xl *xlog.Logger, senderID string, msgBody []b
 		return fmt.Errorf("room status not in PK")
 	}
 	// 检查房间ID是否匹配。
-	if selfRoom.ID != req.PKRoomID && pkRoom.ID != req.PKRoomID {
-		res.Code = errors.WSErrorNoPermission
-		return fmt.Errorf("user %s does not have permission to end PK with room %s", senderID, req.PKRoomID)
-	}
+	//if selfRoom.ID != req.PKRoomID && pkRoom.ID != req.PKRoomID {
+	//	res.Code = errors.WSErrorNoPermission
+	//	return fmt.Errorf("user %s does not have permission to end PK with room %s", senderID, req.PKRoomID)
+	//}
 	// 向对方发送结束PK推送。
 	endMessage := &protocol.PKEndNotify{
 		RPCID:    "",
