@@ -16,7 +16,6 @@ package controller
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -176,6 +175,7 @@ func (s *SignalingService) OnStartPK(xl *xlog.Logger, senderID string, msgBody [
 			return fmt.Errorf("invalid room type %s", pkRoom.Type)
 		}
 	}
+	//判断要PK的房间状态是否为单人直播
 	if pkRoom.Status != protocol.LiveRoomStatusSingle {
 		res := &protocol.StartPKResponse{
 			RPCID: req.RPCID,
@@ -195,6 +195,7 @@ func (s *SignalingService) OnStartPK(xl *xlog.Logger, senderID string, msgBody [
 		res.Code = errors.WSErrorRoomInPK
 		return err
 	}
+
 	// 获取自己和对方的账户信息。
 	pkPlayer, err := s.accountCtl.GetAccountByID(xl, pkRoom.Creator)
 	if err != nil {
@@ -400,7 +401,7 @@ func (s *SignalingService) onPKTimeout(proposerID string, proposerRoomID string,
 	}
 	return nil
 }
-func (s *SignalingService) generateRTCRoomToken(roomID string, userID string, permission string) string {
+func (s *SignalingService) generateRTCRoomRelayToken(roomID string, userID string, permission string) string {
 	rtcClient := qiniurtc.NewManager(&qiniuauth.Credentials{
 		AccessKey: s.rtcConfig.KeyPair.AccessKey,
 		SecretKey: []byte(s.rtcConfig.KeyPair.SecretKey),
@@ -507,26 +508,26 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 		res.Code = errors.WSErrorRoomNotInPK
 		return err
 	}
-	replyRtcRoom := s.generateRoomID()
-	replyRtcRoomToken := s.generateRTCRoomToken(replyRtcRoom, senderID, "admin")
+
 	// 通知发起者
 	answerMessage := &protocol.PKAnswerNotify{
-		RPCID:             "",
-		ReqRoomID:         req.ReqRoomID,
-		Accepted:          req.Accept,
-		RelayRTCRoom:      replyRtcRoom,
-		RelayRTCRoomToken: replyRtcRoomToken,
+		RPCID:     req.RPCID,
+		ReqRoomID: req.ReqRoomID,
+		Accepted:  req.Accept,
 	}
+
 	if req.Accept {
-		answerMessage.RTCRoom = selfRoom.ID
-		answerMessage.RTCRoomToken = s.generateRTCRoomToken(selfRoom.ID, pkPlayer.ID, "user")
+		answerMessage.RelayRTCRoom = selfRoom.RTCRoom
+		answerMessage.RelayRTCRoomToken = s.generateRTCRoomRelayToken(selfRoom.RTCRoom, pkPlayer.ID, "user")
 	}
+
 	err = s.Notify(xl, pkPlayer.ID, protocol.MT_PKAnswerNotify, answerMessage)
 	if err != nil {
 		shouldResetStatus = true
 		res.Code = errors.WSErrorPlayerOffline
 		return err
 	}
+
 	// 修改房间与用户状态。
 	if req.Accept {
 		selfRoom.Status = protocol.LiveRoomStatusPK
@@ -565,24 +566,13 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 		return err
 	}
 	s.answerPKRequest(pkPlayer.ID, pkRoom.ID, senderID, selfRoom.ID, req.Accept)
+
 	// 成功返回。
 	res.ReqRoomID = req.ReqRoomID
 	res.Code = errors.WSErrorOK
-	res.ReplayRTCRoom = replyRtcRoom
-	res.ReplayRTCRoomToken = replyRtcRoomToken
+	res.ReplayRTCRoom = req.ReqRoomID                                                     //要跨的房间ID
+	res.ReplayRTCRoomToken = s.generateRTCRoomRelayToken(req.ReqRoomID, senderID, "user") //跨房token
 	return nil
-}
-
-// generateRoomID 生成直播间ID。
-func (s *SignalingService) generateRoomID() string {
-	alphaNum := "0123456789abcdefghijklmnopqrstuvwxyz"
-	roomID := ""
-	idLength := 16
-	for i := 0; i < idLength; i++ {
-		index := rand.Intn(len(alphaNum))
-		roomID = roomID + string(alphaNum[index])
-	}
-	return roomID
 }
 
 // OnEndPK 结束PK。
