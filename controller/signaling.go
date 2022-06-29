@@ -517,8 +517,8 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 	}
 
 	if req.Accept {
-		answerMessage.RelayRTCRoom = selfRoom.RTCRoom
-		answerMessage.RelayRTCRoomToken = s.generateRTCRoomRelayToken(selfRoom.RTCRoom, pkPlayer.ID, "user")
+		answerMessage.RelayRtcRoom = selfRoom.RTCRoom
+		answerMessage.RelayRtcRoomToken = s.generateRTCRoomRelayToken(selfRoom.RTCRoom, pkPlayer.ID, "user")
 	}
 
 	err = s.Notify(xl, pkPlayer.ID, protocol.MT_PKAnswerNotify, answerMessage)
@@ -570,8 +570,8 @@ func (s *SignalingService) OnAnswerPK(xl *xlog.Logger, senderID string, msgBody 
 	// 成功返回。
 	res.ReqRoomID = req.ReqRoomID
 	res.Code = errors.WSErrorOK
-	res.ReplayRTCRoom = req.ReqRoomID                                                     //要跨的房间ID
-	res.ReplayRTCRoomToken = s.generateRTCRoomRelayToken(req.ReqRoomID, senderID, "user") //跨房token
+	res.RelayRtcRoom = req.ReqRoomID                                                     //要跨的房间ID
+	res.RelayRtcRoomToken = s.generateRTCRoomRelayToken(req.ReqRoomID, senderID, "user") //跨房token
 	return nil
 }
 
