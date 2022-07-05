@@ -175,7 +175,7 @@ func (p *AnswerPKRequest) Unmarshal(b []byte) error {
 
 type AnswerPKResponse struct {
 	// ReqRoomID 发起PK请求的直播间ID。
-	ReqRoomID         string `json:"ReqRoomID"`
+	ReqRoomID         string `json:"reqRoomID"`
 	RPCID             string `json:"rpcID,omitempty"`
 	RelayRtcRoom      string `json:"relayRtcRoom,omitempty"`
 	RelayRtcRoomToken string `json:"relayRtcRoomToken,omitempty"`
