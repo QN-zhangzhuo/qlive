@@ -197,6 +197,8 @@ func NewRouter(conf *config.Config) (*gin.Engine, error) {
 	router.GET(conf.Prometheus.MetricsPath, promHandler.HandleMetrics)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	router.GET("/", func(ctx *gin.Context) { ctx.JSON(http.StatusOK, gin.H{}) })
+
 	router.NoRoute(addRequestID, returnNotFound)
 	router.RedirectTrailingSlash = false
 
